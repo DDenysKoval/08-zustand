@@ -5,6 +5,30 @@ interface Props {
 import { fetchNotes } from "@/lib/api"
 import NotesClient from "./Notes.client"
 
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const tag = slug[0];
+  
+  return {
+    title: `Notes: ${tag}`,
+    description: `${tag} notes to management`,
+    openGraph: {
+      title: `Notes: ${tag}`,
+      description: `${tag} notes to management`,
+      url: `https://notehub.com/notes/filter/${tag}`,
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1374,
+          height: 916,
+          alt: "NoteHub logo"
+        },
+      ],
+    }
+  }
+}
+
+
 export default async function NotesByCategory({ params }: Props) {
   const { slug } = await params;
   const tag = slug[0] === "All" ? undefined : slug[0]

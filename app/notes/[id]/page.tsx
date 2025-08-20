@@ -7,6 +7,28 @@ interface Props {
   params: Promise<{ id: string }>;
 };
 
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  const note = await fetchNoteById(id);
+  return {
+    title: `Note: ${note.title}`,
+    description: note.content.slice(0, 20),
+    openGraph: {
+      title: `Note: ${note.title}`,
+      description: note.content.slice(0, 50),
+      url: `https://notehub.com/notes/${id}`,
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1374,
+          height: 916,
+          alt: "NoteHub logo"
+        },
+      ],
+    }
+  }
+}
+
 const NoteDetails = async ({ params }: Props) => {
   const { id } = await params;
   const queryClient = new QueryClient();

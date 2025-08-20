@@ -10,6 +10,7 @@ import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import css from "./NotesPage.module.css"
+import Link from "next/link";
 
 interface NotesClientProps {
   initialData: NotesHttpResponse,
@@ -29,14 +30,6 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
 
   const totalPages = data?.totalPages ?? 1
 
-  const handleCreate = () => {
-    setIsModalOpen(true)
-  };
-
-  const handleClose = () => {
-    setIsModalOpen(false);
-  };
-
   const handleChange = (value:string) => {
     debouncedSetSearch(value)
   };
@@ -53,16 +46,11 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
       <div className={css.toolbar}>
         <SearchBox onChange={ handleChange } />
         {isSuccess && totalPages > 1 && <Pagination totalPages={totalPages} page={page} setPage={setPage}/>}
-        <button className={css.button} onClick={handleCreate}>Create note +</button>
+        <Link className={css.button} href="/notes/action/create">Create note +</Link>
       </div>
       {data?.notes !== undefined && data?.notes.length !== 0
         ? <NoteList notes={data?.notes} />
         : <p className={css.empty}>Notes not found.</p>}
-      {isModalOpen &&
-        <Modal onClose={handleClose} >
-          <NoteForm onClose={handleClose} />
-        </Modal>
-      }
     </div>
   )
 }
