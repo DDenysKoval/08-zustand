@@ -3,54 +3,42 @@ import css from "./NoteForm.module.css"
 import { useId } from "react";
 import type { NewNote } from "../../types/note";
 import { useNoteDraftStore } from "@/lib/store/noteStore";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "@/lib/api";
 
-
-interface NoteFormProps {
-  mutation: (note: NewNote) => void;
-  isPending: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onClose: () => void;
-}
-
-// interface OrderFormValues {
-//   title: string;
-//   content: string;
-//   tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
-// }
-
-// const initialValues: OrderFormValues = {
-//   title: "",
-//   content: "",
-//   tag: "Todo",
-// }
-
-// const OrderFormSchema = Yup.object().shape({
-//   title: Yup.string()
-//     .min(3, "Title must be at least 3 characters")
-//     .max(50, "Title is too long")
-//     .required("Title is required"),
-//   content: Yup.string()
-//     .max(500, "Content is too long"),
-//   tag: Yup.string()
-//     .oneOf(["Todo" , "Work" , "Personal" , "Meeting" , "Shopping"], "Invalid tag")
-//     .required("Choose note's tag")
-// })
-
-
-
-export default function NoteForm({ mutation, isPending, onChange, onClose }:NoteFormProps) {
+export default function NoteForm() {
   const fieldId = useId();
-  const { draft, clearDraft} = useNoteDraftStore();
+  const router = useRouter()
+  const { draft, setDraft, clearDraft} = useNoteDraftStore();
+  const queryClient = useQueryClient();
+  const {mutate, isPending} = useMutation({
+    mutationFn: createNote,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      clearDraft()
+      router.push("/notes/filter/All")
+    }
+  })
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setDraft({
+      ...draft,
+      [e.target.name]: e.target.value
+    })
+  }
+  const handleClose = () => {
+    router.back()
+  }
+  
 
-  const handleSubmit = (formData: FormData) => {
+  const handleSubmit = (formData: FormData) => {  
     const data = Object.fromEntries(formData) as unknown as NewNote;
     if (data.title.trim().length === 0) {
-      alert("Please enter note's title")
+      return alert("Please enter note's title");
     } else if (data.content.trim().length === 0) {
-      alert("Please enter note's content")
+      return alert("Please enter note's content")
     }
-    mutation(data)
-    clearDraft()
+    mutate(data)
   }
 
   return (
@@ -63,7 +51,7 @@ export default function NoteForm({ mutation, isPending, onChange, onClose }:Note
             name="title"
             className={css.input}
             defaultValue={draft.title}
-            onChange={onChange}
+            onChange={handleChange}
           />
         </div>
   
@@ -75,7 +63,7 @@ export default function NoteForm({ mutation, isPending, onChange, onClose }:Note
             rows={8}
             className={css.textarea}
             defaultValue={draft.content}
-            onChange={onChange}
+            onChange={handleChange}
           />
         </div>
   
@@ -86,7 +74,7 @@ export default function NoteForm({ mutation, isPending, onChange, onClose }:Note
             name="tag"
             className={css.select}
             defaultValue={draft.tag}
-            onChange={onChange}
+            onChange={handleChange}
           >
             <option value="Todo">Todo</option>
             <option value="Work">Work</option>
@@ -97,7 +85,7 @@ export default function NoteForm({ mutation, isPending, onChange, onClose }:Note
         </div>
   
         <div className={css.actions}>
-          <button type="button" className={css.cancelButton} onClick={onClose}>
+          <button type="button" className={css.cancelButton} onClick={handleClose}>
             Cancel
           </button>
           <button
